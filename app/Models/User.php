@@ -909,6 +909,7 @@ class User extends Model implements AfterCommit, AuthenticatableContract, HasLoc
             'scoresMania',
             'scoresOsu',
             'scoresTaiko',
+            'soloScores',
             'statisticsFruits',
             'statisticsMania',
             'statisticsOsu',
@@ -1414,6 +1415,11 @@ class User extends Model implements AfterCommit, AuthenticatableContract, HasLoc
         return $returnQuery ? $this->$relation() : $this->$relation;
     }
 
+    public function soloScores(): HasMany
+    {
+        return $this->hasMany(Solo\Score::class);
+    }
+
     public function topicWatches()
     {
         return $this->hasMany(TopicWatch::class);
@@ -1761,6 +1767,18 @@ class User extends Model implements AfterCommit, AuthenticatableContract, HasLoc
     public function authHash(): string
     {
         return hash('sha256', $this->user_email).':'.hash('sha256', $this->user_password);
+    }
+
+    public function recentScoreCount(string $ruleset): int
+    {
+        return $this->soloScores()
+            ->default()
+            ->forRuleset($ruleset)
+            ->includeFails(false)
+            ->select('id')
+            ->limit(100)
+            ->get()
+            ->count();
     }
 
     public function resetSessions(): void
